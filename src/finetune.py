@@ -1,5 +1,6 @@
 import torch
 import pandas as pd
+import torch.amp
 from torch.utils.data import DataLoader
 from dataset import CheXpertDataset
 from logger import logger
@@ -30,7 +31,7 @@ def finetune_data(model, image_processor, tokenizer, train_chexpert, train_embed
     logger.info("Finetuning the model!")
     input_ids, attention_masks = process_text(tokenizer, train_chexpert['section_impression'])
     train_dataset = CheXpertDataset(train_embeddings, input_ids, attention_masks, image_processor)
-    training_dataloader = DataLoader(train_dataset, batch_size = 16, shuffle = True)
+    training_dataloader = DataLoader(train_dataset, batch_size = 8, shuffle = True)
     image_token_id = tokenizer("<image>", add_special_tokens=False)["input_ids"][-1]
     #endofchunk_token_id = tokenizer("<|endofchunk|>", add_special_tokens=False)["input_ids"][-1]
     accelerator = Accelerator()
@@ -45,6 +46,7 @@ def finetune_data(model, image_processor, tokenizer, train_chexpert, train_embed
         param.requires_grad = False
     model.train()
 
+    accelerator.free_memory()
     torch.cuda.empty_cache()
     epochs = 1
     for epoch in range(epochs):
@@ -60,7 +62,8 @@ def finetune_data(model, image_processor, tokenizer, train_chexpert, train_embed
             labels[labels == tokenizer.pad_token_id] = -100
             labels = labels.to(device)
             #Compute the model loss
-            model_loss = model(images, input_ids, attention_masks, labels = labels)[0] #Minimize the sum of image-to-text loss and text-to-image loss
+            with accelerator.autocast():
+                model_loss = model(images, input_ids, attention_masks, labels = labels)[0] #Minimize the sum of image-to-text loss and text-to-image loss
             #Perform backpropagation
             optimizer.zero_grad()
             accelerator.backward(model_loss)
