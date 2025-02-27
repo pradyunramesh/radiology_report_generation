@@ -1,6 +1,6 @@
 from model import MedFlamingoModel
 from preprocessing import CheXpertPreprocessing
-from finetune import finetune_data, load_data_and_embeddings
+from finetune import finetune_data
 from logger import logger
 
 def main():

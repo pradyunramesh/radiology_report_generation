@@ -7,15 +7,6 @@ from logger import logger
 from einops import rearrange
 from accelerate import Accelerator
 
-def load_data_and_embeddings():
-    '''Method to load the CheXpert dataset and embeddings'''
-    logger.info("Loading data and embeddings!")
-    train_chexpert = pd.read_csv('/data/mchome/pr2762/radiology_data/train_chexpert_plus.csv')
-    val_chexpert = pd.read_csv('/data/mchome/pr2762/radiology_data/valid_chexpert_plus.csv')
-    test_chexpert = pd.read_csv('/data/mchome/pr2762/radiology_data/test_chexpert_plus.csv')
-    logger.info("Data and embeddings loaded successfully!")
-    return train_chexpert, val_chexpert, test_chexpert
-
 def process_text(tokenizer, text_data):
     '''Method to process the text data'''
     logger.info("Processing text data!")
